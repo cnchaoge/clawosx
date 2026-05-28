@@ -62,11 +62,13 @@ def start_service():
         messagebox.showerror("错误", "Windows-Start.bat 未找到")
         return False
     try:
-        subprocess.Popen(
+        import subprocess as sub
+        DETACHED_PROCESS = 0x00000008
+        CREATE_NO_WINDOW = 0x08000000
+        sub.Popen(
             ["cmd", "/c", START_BAT],
             cwd=SCRIPT_DIR,
-            shell=True,
-            creationflags=0x08000000
+            creationflags=DETACHED_PROCESS | CREATE_NO_WINDOW
         )
         return True
     except Exception as e:
@@ -75,10 +77,12 @@ def start_service():
 
 def stop_service():
     try:
-        subprocess.run(
+        import subprocess as sub
+        CREATE_NO_WINDOW = 0x08000000
+        sub.run(
             ["taskkill", "/f", "/im", "node.exe"],
             capture_output=True,
-            creationflags=0x08000000
+            creationflags=CREATE_NO_WINDOW
         )
         return True
     except:
@@ -433,8 +437,17 @@ def save_all():
     provider = ai_provider_var.get()
     model_name = model_e.get().strip() or "MiniMax-M2.7"
 
+    # Read actual port from file, fallback to default
+    actual_port = DEFAULT_PORT
+    if os.path.exists(PORT_FILE):
+        try:
+            with open(PORT_FILE, "r") as f:
+                actual_port = int(f.read().strip())
+        except:
+            pass
+
     cfg["gateway"] = {
-        "port": DEFAULT_PORT,
+        "port": actual_port,
         "auth": {"mode": "none"}
     }
 
