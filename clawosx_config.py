@@ -8,6 +8,7 @@ import os
 import tkinter as tk
 from tkinter import messagebox
 import subprocess
+import webbrowser
 
 # === 配置路径 ===
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -92,8 +93,8 @@ ENTRY_BG = "#21262d"
 # === 主窗口 ===
 root = tk.Tk()
 root.title("ClawOSX 配置工具")
-root.geometry("480x700")
-root.minsize(400, 600)
+root.geometry("480x720")
+root.minsize(400, 620)
 root.configure(bg=BG)
 
 canvas = tk.Canvas(root, bg=BG, highlightthickness=0, bd=0)
@@ -171,8 +172,23 @@ tk.Frame(sc, bg=BG, height=1).pack(fill="x", pady=(4, 6))
 btn_frame = tk.Frame(sc, bg=CARD)
 btn_frame.pack(fill="x")
 btn(btn_frame, "刷新", lambda: update_status(), bg=DARK_GRAY, fg=WHITE)
-btn(btn_frame, "停止", lambda: do_stop(), bg=RED, fg=WHITE)
-btn(btn_frame, "启动", lambda: do_start(), bg=GREEN, fg="#0d1117")
+stop_btn_ref = btn(btn_frame, "停止", lambda: do_stop(), bg=RED, fg=WHITE)
+start_btn_ref = btn(btn_frame, "启动", lambda: do_start(), bg=GREEN, fg="#0d1117")
+
+# 开始聊天按钮（运行后才显示）
+chat_btn_frame = tk.Frame(sc, bg=CARD)
+chat_btn_frame.pack(fill="x", pady=(0, 4))
+chat_btn = tk.Button(chat_btn_frame, text="开始聊天", command=lambda: open_browser(),
+                    bg=GREEN, fg="#0d1117",
+                    font=("Microsoft YaHei UI", 13, "bold"), bd=0, cursor="hand2",
+                    activebackground=GREEN, activeforeground="#0d1117",
+                    pady=8)
+chat_btn.pack(fill="x", ipady=4)
+chat_btn_frame.pack_forget()  # 初始隐藏
+
+def open_browser():
+    port = get_port()
+    webbrowser.open(f"http://127.0.0.1:{port}/")
 
 def update_status():
     port = get_port()
@@ -181,40 +197,47 @@ def update_status():
     status_lbl.configure(text="运行中" if running else "已停止",
                          fg=GREEN if running else GRAY)
     status_port_lbl.configure(text=f"端口 {port}" if running else "")
+    if running:
+        chat_btn_frame.pack(fill="x", pady=(0, 4))
+    else:
+        chat_btn_frame.pack_forget()
 
 def do_stop():
     status_dot.configure(bg=YELLOW)
     status_lbl.configure(text="正在停止...", fg=YELLOW)
     status_port_lbl.configure(text="")
-    start_btn.configure(state="disabled")
-    stop_btn.configure(state="disabled")
+    chat_btn_frame.pack_forget()
+    start_btn_ref.configure(state="disabled")
+    stop_btn_ref.configure(state="disabled")
     stop_service()
-    root.after(1200, lambda: (update_status(), start_btn.configure(state="normal"), stop_btn.configure(state="normal")))
+    root.after(1200, lambda: (
+        update_status(),
+        start_btn_ref.configure(state="normal"),
+        stop_btn_ref.configure(state="normal")
+    ))
 
 def do_start():
     status_dot.configure(bg=YELLOW)
     status_lbl.configure(text="正在启动...", fg=YELLOW)
     status_port_lbl.configure(text="")
-    # 禁用按钮防止重复点击
-    start_btn.configure(state="disabled")
-    stop_btn.configure(state="disabled")
+    start_btn_ref.configure(state="disabled")
+    stop_btn_ref.configure(state="disabled")
+    chat_btn_frame.pack_forget()
     start_service()
 
     def poll_wait():
-        port = get_port()
-        running = check_port_open(port)
+        running = check_port_open(get_port())
         if running:
+            port = get_port()
             status_dot.configure(bg=GREEN)
             status_lbl.configure(text="运行中", fg=GREEN)
             status_port_lbl.configure(text=f"端口 {port}")
-            start_btn.configure(state="normal")
-            stop_btn.configure(state="normal")
-            # 自动打开浏览器
-            import webbrowser
-            webbrowser.open(f"http://127.0.0.1:{port}/")
+            start_btn_ref.configure(state="normal")
+            stop_btn_ref.configure(state="normal")
+            chat_btn_frame.pack(fill="x", pady=(0, 4))
         else:
-            start_btn.configure(state="normal")
-            stop_btn.configure(state="normal")
+            start_btn_ref.configure(state="normal")
+            stop_btn_ref.configure(state="normal")
             update_status()
 
     root.after(2500, poll_wait)
