@@ -235,6 +235,8 @@ def do_start():
             start_btn_ref.configure(state="normal")
             stop_btn_ref.configure(state="normal")
             chat_btn_frame.pack(fill="x", pady=(0, 4))
+            # 自动打开浏览器
+            webbrowser.open(f"http://127.0.0.1:{port}/")
         else:
             start_btn_ref.configure(state="normal")
             stop_btn_ref.configure(state="normal")
