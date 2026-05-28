@@ -122,11 +122,18 @@ if "%NEED_OPENCLAW_INSTALL%"=="1" (
 
     echo Installing OpenClaw (1-3 min, keep network)...
 
-    "%NODE_EXE%" "%NODE_TARGET%\npm.cmd" install --prefix "%NODE_TARGET%" --registry="%NPM_MIRROR%" --ignore-scripts --no-audit --no-fund
+    set "RETRY_COUNT=0"
+    :npm_retry
+    set /a RETRY_COUNT+=1
+    cmd /c "cd /d "%NODE_TARGET%" && npm.cmd install --registry="%NPM_MIRROR%" --ignore-scripts --no-audit --no-fund"
 
     if not exist "%NODE_TARGET%\node_modules\openclaw\openclaw.mjs" (
+        if %RETRY_COUNT% lss 3 (
+            echo [RETRY] npm install attempt %RETRY_COUNT% failed, retrying...
+            goto :npm_retry
+        )
         echo.
-        echo [ERROR] OpenClaw install failed
+        echo [ERROR] OpenClaw install failed after 3 attempts
         pause
         exit /b 1
     )
