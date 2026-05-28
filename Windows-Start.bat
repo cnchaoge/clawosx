@@ -27,7 +27,7 @@ set "PID_FILE=%DATA_DIR%\.openclaw\gateway.pid"
 if not exist "%DATA_DIR%\logs" mkdir "%DATA_DIR%\logs" 2>nul
 if not exist "%DATA_DIR%\.openclaw" mkdir "%DATA_DIR%\.openclaw" 2>nul
 
-for /f "tokens=2 delims==." %%a in ('"%NODE_EXE%" -e "process.stdout.write(Date.now().toString())" 2^>nul') do set /a RANDOM_PORT=1878%%a:~-3
+for /f %%a in ('powershell -Command "[int](Get-Random -Minimum 10000 -Maximum 60000)"') do set "RANDOM_PORT=%%a"
 
 echo Starting Gateway on port %RANDOM_PORT%...
 start /min cmd /c ""%NODE_EXE%" "%OPENCLAW_MJS%" gateway run --port %RANDOM_PORT% --auth none --allow-unconfigured 2>>"%GATEWAY_LOG%"
