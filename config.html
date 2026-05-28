@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClawOSX 配置中心</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #1a1a2e;
+  color: #eee;
+  min-height: 100vh;
+  padding: 20px;
+}
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+header h1 { font-size: 28px; margin-bottom: 5px; }
+header p { color: #888; font-size: 14px; }
+.card {
+  background: #16213e;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid #0f3460;
+}
+.card h2 {
+  font-size: 16px;
+  color: #00d4ff;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.status-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: #e94560;
+}
+.status-dot.running { background: #00ff88; }
+.status-text { font-size: 14px; color: #aaa; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+button {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary {
+  background: #00d4ff;
+  color: #1a1a2e;
+  font-weight: bold;
+}
+.btn-primary:hover { background: #00b8e6; }
+.btn-danger { background: #e94560; color: #fff; }
+.btn-danger:hover { background: #d63d56; }
+.btn-success { background: #00ff88; color: #1a1a2e; }
+.btn-success:hover { background: #00e67a; }
+.btn-gray { background: #333; color: #ccc; }
+.btn-gray:hover { background: #444; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 6px;
+}
+input[type="text"], input[type="password"], select {
+  width: 100%;
+  padding: 10px 12px;
+  background: #0f3460;
+  border: 1px solid #1a4a7a;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: #00d4ff;
+}
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #0f3460;
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label { font-size: 14px; }
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #333;
+  border-radius: 26px;
+  transition: 0.3s;
+}
+.toggle-slider:before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+input:checked + .toggle-slider { background: #00d4ff; }
+input:checked + .toggle-slider:before { transform: translateX(22px); }
+.channel-card {
+  background: #0f3460;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.channel-card h3 { font-size: 14px; margin-bottom: 10px; }
+.hidden { display: none; }
+.msg {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.msg-success { background: #0a4d2e; border: 1px solid #00ff88; color: #00ff88; }
+.msg-error { background: #4d0a1a; border: 1px solid #e94560; color: #e94560; }
+footer {
+  text-align: center;
+  color: #555;
+  font-size: 12px;
+  margin-top: 30px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🦞 ClawOSX 配置中心</h1>
+    <p>Portable AI Agent — USB Edition</p>
+  </header>
+
+  <div id="msg-box" class="msg hidden"></div>
+
+  <!-- Service Status -->
+  <div class="card">
+    <h2>🔧 服务状态</h2>
+    <div class="status-row">
+      <div id="status-dot" class="status-dot"></div>
+      <span id="status-text" class="status-text">检测中...</span>
+    </div>
+    <div class="btn-row">
+      <button id="btn-start" class="btn-success" onclick="gatewayStart()">启动服务</button>
+      <button id="btn-stop" class="btn-danger" onclick="gatewayStop()">停止服务</button>
+      <button class="btn-gray" onclick="refreshStatus()">刷新状态</button>
+    </div>
+  </div>
+
+  <!-- AI Config -->
+  <div class="card">
+    <h2>🤖 AI 配置</h2>
+    <div class="form-group">
+      <label>Provider</label>
+      <select id="ai-provider">
+        <option value="minimax">MiniMax</option>
+        <option value="openai">OpenAI</option>
+        <option value="deepseek">DeepSeek</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>API Key</label>
+      <input type="password" id="ai-apikey" placeholder="sk-...">
+    </div>
+    <div class="form-group">
+      <label>Model（可选）</label>
+      <input type="text" id="ai-model" placeholder="如: minimax-ai-select">
+    </div>
+    <button class="btn-primary" onclick="saveAI()">保存 AI 配置</button>
+  </div>
+
+  <!-- Message Channels -->
+  <div class="card">
+    <h2>💬 消息渠道</h2>
+
+    <!-- Feishu -->
+    <div class="channel-card">
+      <h3>飞书 Feishu</h3>
+      <div class="toggle-row">
+        <span class="toggle-label">启用</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="feishu-enabled" onchange="toggleChannel('feishu')">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="feishu-config" class="hidden">
+        <div class="form-group" style="margin-top:10px">
+          <label>App ID</label>
+          <input type="text" id="feishu-appid" placeholder="cli_xxx">
+        </div>
+        <div class="form-group">
+          <label>App Secret</label>
+          <input type="password" id="feishu-appsecret" placeholder="App Secret">
+        </div>
+        <button class="btn-primary" onclick="saveChannel('feishu')">保存飞书配置</button>
+      </div>
+    </div>
+
+    <!-- Telegram -->
+    <div class="channel-card">
+      <h3>Telegram</h3>
+      <div class="toggle-row">
+        <span class="toggle-label">启用</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="telegram-enabled" onchange="toggleChannel('telegram')">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="telegram-config" class="hidden">
+        <div class="form-group" style="margin-top:10px">
+          <label>Bot Token</label>
+          <input type="password" id="telegram-token" placeholder="123456:ABC-DEF...">
+        </div>
+        <button class="btn-primary" onclick="saveChannel('telegram')">保存 Telegram 配置</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Service Settings -->
+  <div class="card">
+    <h2>⚙️ 服务设置</h2>
+    <div class="form-group">
+      <label>端口</label>
+      <input type="text" id="svc-port" placeholder="18789">
+    </div>
+    <div class="form-group">
+      <label>访问地址</label>
+      <input type="text" id="svc-url" placeholder="http://127.0.0.1:18789" readonly style="color:#888">
+    </div>
+    <button class="btn-primary" onclick="saveService()">保存服务设置</button>
+  </div>
+
+  <footer>
+    ClawOSX v1.0 — USB Portable AI Agent
+  </footer>
+</div>
+
+<script>
+const BASE = 'FILE:///' + 'X:/CLAWOSX'.replace(/\\/g, '/'); // fallback placeholder
+let currentPort = 18789;
+
+// Detect port from URL
+try {
+  const u = new URL(window.location.href);
+  if (u.port) currentPort = u.port;
+} catch(e) {}
+
+// ─── Status ───
+async function refreshStatus() {
+  const dot = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  try {
+    const r = await fetch(`http://127.0.0.1:${currentPort}/`, {timeout: 2000});
+    dot.className = 'status-dot running';
+    text.textContent = `运行中 (端口 ${currentPort})`;
+    document.getElementById('btn-start').disabled = true;
+    document.getElementById('btn-stop').disabled = false;
+  } catch(e) {
+    dot.className = 'status-dot';
+    text.textContent = '未运行';
+    document.getElementById('btn-start').disabled = false;
+    document.getElementById('btn-stop').disabled = true;
+  }
+}
+
+function gatewayStart() {
+  showMsg('请通过 Windows-Start.bat 启动服务', 'error');
+}
+function gatewayStop() {
+  showMsg('请关闭 Windows-Start.bat 窗口停止服务', 'error');
+}
+
+// ─── AI Config ───
+async function loadAI() {
+  try {
+    const r = await fetch(`http://127.0.0.1:${currentPort}/__openclaw__/config`);
+    if (!r.ok) return;
+    const cfg = await r.json();
+    const providers = cfg.models?.providers || {};
+    const keys = Object.keys(providers);
+    if (keys.length > 0) {
+      const p = providers[keys[0]];
+      document.getElementById('ai-provider').value = keys[0];
+      document.getElementById('ai-apikey').value = p.apiKey || '';
+      document.getElementById('ai-model').value = p.model || '';
+    }
+  } catch(e) {}
+}
+refreshStatus();
+setTimeout(loadAI, 500);
+
+async function saveAI() {
+  const provider = document.getElementById('ai-provider').value;
+  const apiKey = document.getElementById('ai-apikey').value.trim();
+  const model = document.getElementById('ai-model').value.trim();
+  if (!apiKey) { showMsg('请输入 API Key', 'error'); return; }
+  try {
+    const r = await fetch(`http://127.0.0.1:${currentPort}/__openclaw__/config`, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        models: {
+          mode: 'merge',
+          providers: {
+            [provider]: { apiKey, model: model || undefined }
+          }
+        }
+      })
+    });
+    if (r.ok) showMsg('AI 配置已保存', 'success');
+    else showMsg('保存失败', 'error');
+  } catch(e) {
+    showMsg('保存失败: ' + e.message, 'error');
+  }
+}
+
+// ─── Channels ───
+function toggleChannel(name) {
+  const enabled = document.getElementById(`${name}-enabled`).checked;
+  document.getElementById(`${name}-config`).classList.toggle('hidden', !enabled);
+}
+
+async function loadChannels() {
+  try {
+    const r = await fetch(`http://127.0.0.1:${currentPort}/__openclaw__/config`);
+    if (!r.ok) return;
+    const cfg = await r.json();
+    const feishu = cfg.channels?.feishu || {};
+    const telegram = cfg.channels?.telegram || {};
+    document.getElementById('feishu-enabled').checked = feishu.enabled || false;
+    document.getElementById('feishu-appid').value = feishu.appId || '';
+    document.getElementById('feishu-appsecret').value = feishu.appSecret || '';
+    if (feishu.enabled) document.getElementById('feishu-config').classList.remove('hidden');
+    document.getElementById('telegram-enabled').checked = telegram.enabled || false;
+    document.getElementById('telegram-token').value = telegram.botToken || '';
+    if (telegram.enabled) document.getElementById('telegram-config').classList.remove('hidden');
+  } catch(e) {}
+}
+setTimeout(loadChannels, 800);
+
+async function saveChannel(name) {
+  let enabled = document.getElementById(`${name}-enabled`).checked;
+  let body = {};
+  if (name === 'feishu') {
+    const appId = document.getElementById('feishu-appid').value.trim();
+    const appSecret = document.getElementById('feishu-appsecret').value.trim();
+    if (enabled && (!appId || !appSecret)) { showMsg('请填写 App ID 和 App Secret', 'error'); return; }
+    body = { channels: { feishu: { enabled, appId, appSecret } } };
+  } else if (name === 'telegram') {
+    const token = document.getElementById('telegram-token').value.trim();
+    if (enabled && !token) { showMsg('请填写 Bot Token', 'error'); return; }
+    body = { channels: { telegram: { enabled, botToken: token } } };
+  }
+  try {
+    const r = await fetch(`http://127.0.0.1:${currentPort}/__openclaw__/config`, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    if (r.ok) showMsg(`${name} 配置已保存，重启服务后生效`, 'success');
+    else showMsg('保存失败', 'error');
+  } catch(e) {
+    showMsg('保存失败: ' + e.message, 'error');
+  }
+}
+
+// ─── Service ───
+function saveService() {
+  showMsg('端口更改需修改 Windows-Start.bat', 'error');
+}
+
+// ─── Utils ───
+function showMsg(text, type) {
+  const box = document.getElementById('msg-box');
+  box.textContent = text;
+  box.className = `msg msg-${type}`;
+  box.classList.remove('hidden');
+  setTimeout(() => box.classList.add('hidden'), 3000);
+}
+</script>
+</body>
+</html>
