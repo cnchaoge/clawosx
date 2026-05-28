@@ -93,8 +93,9 @@ ENTRY_BG = "#e9ecef"
 # === 主窗口 ===
 root = tk.Tk()
 root.title("ClawOSX 配置工具")
-root.geometry("480x720")
-root.minsize(400, 620)
+root.geometry("560x820")
+root.minsize(500, 720)
+root.minsize(500, 720)
 root.configure(bg=BG)
 
 canvas = tk.Canvas(root, bg=BG, highlightthickness=0, bd=0)
@@ -118,9 +119,8 @@ canvas.bind_all("<MouseWheel>", on_mousewheel)
 
 # === 组件工具 ===
 def card(parent):
-    f = tk.Frame(parent, bg=CARD, bd=1, relief="solid", highlightcolor=BORDER,
-                 highlightthickness=1, highlightbackground=BORDER)
-    f.pack(fill="x", padx=16, pady=6)
+    f = tk.Frame(parent, bg=CARD)
+    f.pack(fill="x", pady=6)
     return f
 
 def section_title(parent, text):
