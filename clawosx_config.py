@@ -418,7 +418,7 @@ def load_config():
         if "/" in model_ref:
             model_e.insert(0, model_ref.split("/")[1])
         else:
-            model_e.insert(0, v.get("model", "MiniMax-M2.7"))
+            model_e.insert(0, "MiniMax-M2.7")
         break
     feishu = cfg.get("channels", {}).get("feishu", {})
     if feishu.get("appId"):
@@ -433,9 +433,6 @@ def load_config():
 def save_all():
     cfg = load_json(OPENCLAW_JSON)
     apikey = apikey_e.get().strip()
-    if not apikey:
-        messagebox.showwarning("警告", "API Key 不能为空")
-        return
     provider = ai_provider_var.get()
     model_name = model_e.get().strip() or "MiniMax-M2.7"
 
@@ -446,26 +443,32 @@ def save_all():
     }
 
     cfg["env"] = cfg.get("env", {})
-    cfg["env"]["MINIMAX_API_KEY"] = apikey
+    if apikey:
+        cfg["env"]["MINIMAX_API_KEY"] = apikey
+    elif "MINIMAX_API_KEY" in cfg.get("env", {}):
+        del cfg["env"]["MINIMAX_API_KEY"]
 
     cfg["models"] = cfg.get("models", {"mode": "merge", "providers": {}})
     cfg["models"]["mode"] = "merge"
-    cfg["models"]["providers"] = {
-        "minimax": {
-            "baseUrl": "https://api.minimax.io/anthropic",
-            "apiKey": apikey,
-            "api": "anthropic-messages",
-            "models": [
-                {
-                    "id": "MiniMax-M2.7",
-                    "name": "MiniMax M2.7",
-                    "input": ["text"],
-                    "contextWindow": 204800,
-                    "maxTokens": 131072
-                }
-            ]
+    if apikey:
+        cfg["models"]["providers"] = {
+            "minimax": {
+                "baseUrl": "https://api.minimax.io/anthropic",
+                "apiKey": apikey,
+                "api": "anthropic-messages",
+                "models": [
+                    {
+                        "id": "MiniMax-M2.7",
+                        "name": "MiniMax M2.7",
+                        "input": ["text"],
+                        "contextWindow": 204800,
+                        "maxTokens": 131072
+                    }
+                ]
+            }
         }
-    }
+    else:
+        cfg["models"]["providers"] = {}
 
     cfg["agents"] = cfg.get("agents", {"defaults": {}})
     cfg["agents"]["defaults"] = {
