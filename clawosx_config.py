@@ -1,6 +1,6 @@
 """
-ClawOSX Config Tool - Simple GUI for AI API Key, Channels, Service Start/Stop
-Requirements: Python 3.x (Windows自带), 零外部依赖
+ClawOSX 配置工具 - AI API Key / 消息渠道 / 服务启停
+Python 3 内置库，零外部依赖
 """
 import socket
 import json
@@ -52,18 +52,18 @@ def check_port_open(port):
 
 def start_service():
     if not os.path.exists(START_BAT):
-        messagebox.showerror("Error", "Windows-Start.bat not found")
+        messagebox.showerror("错误", "Windows-Start.bat 未找到")
         return False
     try:
         subprocess.Popen(
             ["cmd", "/c", START_BAT],
             cwd=SCRIPT_DIR,
             shell=True,
-            creationflags=0x08000000  # CREATE_NO_WINDOW
+            creationflags=0x08000000
         )
         return True
     except Exception as e:
-        messagebox.showerror("Error", str(e))
+        messagebox.showerror("错误", str(e))
         return False
 
 def stop_service():
@@ -89,13 +89,13 @@ GRAY = "#8b949e"
 DARK_GRAY = "#484f58"
 ENTRY_BG = "#21262d"
 
+# === 主窗口 ===
 root = tk.Tk()
-root.title("ClawOSX")
+root.title("ClawOSX 配置工具")
 root.geometry("480x700")
 root.minsize(400, 600)
 root.configure(bg=BG)
 
-# 可滚动画布
 canvas = tk.Canvas(root, bg=BG, highlightthickness=0, bd=0)
 scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview, width=6)
 scrollable = tk.Frame(canvas, bg=BG)
@@ -115,25 +115,22 @@ def on_mousewheel(event):
 
 canvas.bind_all("<MouseWheel>", on_mousewheel)
 
-# === 小工具 ===
-def card(parent, padx=16, pady=6):
+# === 组件工具 ===
+def card(parent):
     f = tk.Frame(parent, bg=CARD, bd=0)
-    f.pack(fill="x", padx=padx, pady=pady)
+    f.pack(fill="x", padx=16, pady=6)
     return f
 
 def section_title(parent, text):
     tk.Label(parent, text=text, fg=ACCENT, bg=CARD,
-             font=("Segoe UI", 10, "bold"), anchor="w").pack(fill="x", pady=(10, 6), padx=2)
-
-def sep(parent):
-    tk.Frame(parent, bg=BG, height=1).pack(fill="x", pady=(4, 4))
+             font=("Microsoft YaHei UI", 10, "bold"), anchor="w").pack(fill="x", pady=(10, 6), padx=2)
 
 def field(parent, label_text, entry_width=28, show=""):
     f = tk.Frame(parent, bg=CARD)
     f.pack(fill="x", pady=3)
     tk.Label(f, text=label_text, fg=GRAY, bg=CARD,
-             font=("Segoe UI", 9), width=11, anchor="w").pack(side="left", padx=(0, 6))
-    e = tk.Entry(f, bg=ENTRY_BG, fg=WHITE, font=("Segoe UI", 10),
+             font=("Microsoft YaHei UI", 9), width=11, anchor="w").pack(side="left", padx=(0, 6))
+    e = tk.Entry(f, bg=ENTRY_BG, fg=WHITE, font=("Microsoft YaHei UI", 10),
                   insertbackground=WHITE, bd=0, highlightthickness=0,
                   width=entry_width)
     e.pack(side="left")
@@ -143,7 +140,7 @@ def field(parent, label_text, entry_width=28, show=""):
 
 def btn(parent, text, cmd, bg=ACCENT, fg="#0d1117", padx=10):
     b = tk.Button(parent, text=text, command=cmd, bg=bg, fg=fg,
-                  font=("Segoe UI", 9, "bold"), bd=0, cursor="hand2",
+                  font=("Microsoft YaHei UI", 9, "bold"), bd=0, cursor="hand2",
                   activebackground=bg, activeforeground=fg,
                   pady=5, padx=padx)
     b.pack(side="left", padx=(0, 6))
@@ -154,17 +151,17 @@ def status_bar(parent):
     f.pack(fill="x", pady=4)
     dot = tk.Frame(f, width=8, height=8, bg=GRAY)
     dot.pack(side="left", padx=(0, 8), pady=4)
-    lbl = tk.Label(f, text="Unknown", fg=GRAY, bg=CARD, font=("Segoe UI", 10))
+    lbl = tk.Label(f, text="检测中...", fg=GRAY, bg=CARD, font=("Microsoft YaHei UI", 10))
     lbl.pack(side="left")
-    port_lbl = tk.Label(f, text="", fg=DARK_GRAY, bg=CARD, font=("Segoe UI", 9))
+    port_lbl = tk.Label(f, text="", fg=DARK_GRAY, bg=CARD, font=("Microsoft YaHei UI", 9))
     port_lbl.pack(side="right")
     return dot, lbl, port_lbl
 
-# === 顶部 ===
+# === 标题区 ===
 tk.Label(scrollable, text="ClawOSX", fg=WHITE, bg=BG,
-         font=("Segoe UI", 26, "bold")).pack(pady=(18, 2))
-tk.Label(scrollable, text="USB Portable AI Agent  ·  v1.0", fg=GRAY, bg=BG,
-         font=("Segoe UI", 9)).pack(pady=(0, 14))
+         font=("Microsoft YaHei UI", 26, "bold")).pack(pady=(18, 2))
+tk.Label(scrollable, text="U盘便携 AI 助手  ·  v1.0", fg=GRAY, bg=BG,
+         font=("Microsoft YaHei UI", 9)).pack(pady=(0, 14))
 
 # === 服务状态 ===
 sc = card(scrollable)
@@ -173,64 +170,93 @@ tk.Frame(sc, bg=BG, height=1).pack(fill="x", pady=(4, 6))
 
 btn_frame = tk.Frame(sc, bg=CARD)
 btn_frame.pack(fill="x")
-btn(btn_frame, "Refresh", lambda: update_status(), bg=DARK_GRAY, fg=WHITE)
-stop_btn = btn(btn_frame, "Stop", lambda: do_stop(), bg=RED, fg=WHITE)
-start_btn = btn(btn_frame, "Start", lambda: do_start(), bg=GREEN, fg="#0d1117")
+btn(btn_frame, "刷新", lambda: update_status(), bg=DARK_GRAY, fg=WHITE)
+btn(btn_frame, "停止", lambda: do_stop(), bg=RED, fg=WHITE)
+btn(btn_frame, "启动", lambda: do_start(), bg=GREEN, fg="#0d1117")
 
 def update_status():
     port = get_port()
     running = check_port_open(port)
     status_dot.configure(bg=GREEN if running else RED)
-    status_lbl.configure(text="Running" if running else "Stopped",
+    status_lbl.configure(text="运行中" if running else "已停止",
                          fg=GREEN if running else GRAY)
-    status_port_lbl.configure(text=f"port {port}" if running else "")
+    status_port_lbl.configure(text=f"端口 {port}" if running else "")
 
 def do_stop():
+    status_dot.configure(bg=YELLOW)
+    status_lbl.configure(text="正在停止...", fg=YELLOW)
+    status_port_lbl.configure(text="")
+    start_btn.configure(state="disabled")
+    stop_btn.configure(state="disabled")
     stop_service()
-    root.after(1200, update_status)
+    root.after(1200, lambda: (update_status(), start_btn.configure(state="normal"), stop_btn.configure(state="normal")))
 
 def do_start():
+    status_dot.configure(bg=YELLOW)
+    status_lbl.configure(text="正在启动...", fg=YELLOW)
+    status_port_lbl.configure(text="")
+    # 禁用按钮防止重复点击
+    start_btn.configure(state="disabled")
+    stop_btn.configure(state="disabled")
     start_service()
-    root.after(2500, update_status)
+
+    def poll_wait():
+        port = get_port()
+        running = check_port_open(port)
+        if running:
+            status_dot.configure(bg=GREEN)
+            status_lbl.configure(text="运行中", fg=GREEN)
+            status_port_lbl.configure(text=f"端口 {port}")
+            start_btn.configure(state="normal")
+            stop_btn.configure(state="normal")
+            # 自动打开浏览器
+            import webbrowser
+            webbrowser.open(f"http://127.0.0.1:{port}/")
+        else:
+            start_btn.configure(state="normal")
+            stop_btn.configure(state="normal")
+            update_status()
+
+    root.after(2500, poll_wait)
 
 # === AI 配置 ===
 ac = card(scrollable)
-section_title(ac, "AI CONFIG")
+section_title(ac, "AI 配置")
 
 ai_provider_var = tk.StringVar(value="minimax")
 pf = tk.Frame(ac, bg=CARD)
 pf.pack(fill="x", pady=(0, 4))
 for val, txt in [("minimax", "MiniMax"), ("openai", "OpenAI"),
-                 ("deepseek", "DeepSeek"), ("custom", "Custom")]:
+                 ("deepseek", "DeepSeek"), ("custom", "自定义")]:
     tk.Radiobutton(pf, text=txt, variable=ai_provider_var, value=val,
                    bg=CARD, fg=WHITE, activebackground=CARD, cursor="hand2",
-                   selectcolor=ENTRY_BG, font=("Segoe UI", 9)).pack(side="left", padx=(0, 10))
+                   selectcolor=ENTRY_BG, font=("Microsoft YaHei UI", 9)).pack(side="left", padx=(0, 10))
 
 apikey_e = field(ac, "API Key")
-model_e = field(ac, "Model", entry_width=20)
+model_e = field(ac, "模型", entry_width=20)
 
 # === 消息渠道 ===
 cc = card(scrollable)
-section_title(cc, "MESSAGE CHANNELS")
+section_title(cc, "消息渠道")
 
-# Feishu
+# 飞书
 feishu_en_var = tk.BooleanVar(value=False)
 fe = tk.Frame(cc, bg=ENTRY_BG, padx=12, pady=8)
 fe.pack(fill="x", pady=(0, 4))
 fh = tk.Frame(fe, bg=ENTRY_BG)
 fh.pack(fill="x")
-tk.Label(fh, text="Feishu", fg=WHITE, bg=ENTRY_BG, font=("Segoe UI", 10, "bold")).pack(side="left")
+tk.Label(fh, text="飞书", fg=WHITE, bg=ENTRY_BG, font=("Microsoft YaHei UI", 10, "bold")).pack(side="left")
 tk.Checkbutton(fh, variable=feishu_en_var, bg=ENTRY_BG, activebackground=ENTRY_BG,
                cursor="hand2", onvalue=True, offvalue=False,
                selectcolor=ACCENT, indicatoron=False).pack(side="right")
 fd = tk.Frame(fe, bg=ENTRY_BG)
 fd.pack(fill="x", pady=(4, 0))
-tk.Label(fd, text="App ID", fg=GRAY, bg=ENTRY_BG, font=("Segoe UI", 8), width=8).pack(side="left")
-feishu_id_e = tk.Entry(fd, bg=BG, fg=WHITE, font=("Segoe UI", 9),
+tk.Label(fd, text="App ID", fg=GRAY, bg=ENTRY_BG, font=("Microsoft YaHei UI", 8), width=8).pack(side="left")
+feishu_id_e = tk.Entry(fd, bg=BG, fg=WHITE, font=("Microsoft YaHei UI", 9),
                        insertbackground=WHITE, bd=0, highlightthickness=0, width=22)
 feishu_id_e.pack(side="left")
-tk.Label(fd, text="App Secret", fg=GRAY, bg=ENTRY_BG, font=("Segoe UI", 8), width=9).pack(side="left", padx=(8, 0))
-feishu_sec_e = tk.Entry(fd, bg=BG, fg=WHITE, font=("Segoe UI", 9),
+tk.Label(fd, text="App Secret", fg=GRAY, bg=ENTRY_BG, font=("Microsoft YaHei UI", 8), width=9).pack(side="left", padx=(8, 0))
+feishu_sec_e = tk.Entry(fd, bg=BG, fg=WHITE, font=("Microsoft YaHei UI", 9),
                         insertbackground=WHITE, bd=0, highlightthickness=0,
                         width=14, show="*")
 feishu_sec_e.pack(side="left")
@@ -241,24 +267,24 @@ te = tk.Frame(cc, bg=ENTRY_BG, padx=12, pady=8)
 te.pack(fill="x", pady=(0, 4))
 th = tk.Frame(te, bg=ENTRY_BG)
 th.pack(fill="x")
-tk.Label(th, text="Telegram", fg=WHITE, bg=ENTRY_BG, font=("Segoe UI", 10, "bold")).pack(side="left")
+tk.Label(th, text="Telegram", fg=WHITE, bg=ENTRY_BG, font=("Microsoft YaHei UI", 10, "bold")).pack(side="left")
 tk.Checkbutton(th, variable=tg_en_var, bg=ENTRY_BG, activebackground=ENTRY_BG,
                cursor="hand2", onvalue=True, offvalue=False,
                selectcolor=ACCENT, indicatoron=False).pack(side="right")
 td = tk.Frame(te, bg=ENTRY_BG)
 td.pack(fill="x", pady=(4, 0))
-tk.Label(td, text="Bot Token", fg=GRAY, bg=ENTRY_BG, font=("Segoe UI", 8), width=8).pack(side="left")
-tg_token_e = tk.Entry(td, bg=BG, fg=WHITE, font=("Segoe UI", 9),
+tk.Label(td, text="Bot Token", fg=GRAY, bg=ENTRY_BG, font=("Microsoft YaHei UI", 8), width=8).pack(side="left")
+tg_token_e = tk.Entry(td, bg=BG, fg=WHITE, font=("Microsoft YaHei UI", 9),
                        insertbackground=WHITE, bd=0, highlightthickness=0,
                        width=28, show="*")
 tg_token_e.pack(side="left")
 
-# Save
-sf = tk.Frame(cc, bg=CARD, pady=(4, 4))
+# 保存按钮
+sf = tk.Frame(cc, bg=CARD, pady=4)
 sf.pack(fill="x")
-save_btn = btn(sf, "Save All", lambda: save_all(), bg=ACCENT, fg="#0d1117", padx=16)
+save_btn = btn(sf, "保存配置", lambda: save_all(), bg=ACCENT, fg="#0d1117", padx=16)
 
-# === Load & Save ===
+# === 加载 & 保存 ===
 def load_config():
     cfg = load_json(OPENCLAW_JSON)
     providers = cfg.get("models", {}).get("providers", {})
@@ -286,7 +312,7 @@ def save_all():
     provider = ai_provider_var.get()
     apikey = apikey_e.get().strip()
     if not apikey:
-        messagebox.showwarning("Warning", "API Key cannot be empty")
+        messagebox.showwarning("警告", "API Key 不能为空")
         return
     cfg["models"]["providers"] = {
         provider: {
@@ -305,13 +331,12 @@ def save_all():
         "botToken": tg_token_e.get().strip()
     }
     save_json(OPENCLAW_JSON, cfg)
-    messagebox.showinfo("Saved", "Configuration saved")
+    messagebox.showinfo("已保存", "配置保存成功")
 
 # === 底部 ===
-tk.Label(scrollable, text="All data stored on USB drive", fg=DARK_GRAY, bg=BG,
-         font=("Segoe UI", 8)).pack(pady=14)
+tk.Label(scrollable, text="所有数据保存在 U 盘", fg=DARK_GRAY, bg=BG,
+         font=("Microsoft YaHei UI", 8)).pack(pady=14)
 
-# Init
 load_config()
 update_status()
 
