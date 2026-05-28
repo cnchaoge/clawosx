@@ -29,8 +29,14 @@ def load_json(path):
 
 def save_json(path, data):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(json.dumps(data, indent=2, ensure_ascii=False))
+    # Strip BOM if present (UTF-8 BOM causes JSON5 parse errors)
+    with open(path, "rb") as f:
+        raw = f.read()
+    if raw.startswith(b"\xef\xbb\xbf"):
+        with open(path, "wb") as f:
+            f.write(raw[3:])
 
 def get_port():
     if os.path.exists(PORT_FILE):
@@ -432,6 +438,12 @@ def save_all():
         return
     provider = ai_provider_var.get()
     model_name = model_e.get().strip() or "MiniMax-M2.7"
+
+    # Always include gateway block to avoid gateway-mode-missing anomaly
+    cfg["gateway"] = {
+        "port": DEFAULT_PORT,
+        "auth": {"mode": "none"}
+    }
 
     cfg["env"] = cfg.get("env", {})
     cfg["env"]["MINIMAX_API_KEY"] = apikey
