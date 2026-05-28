@@ -5,10 +5,9 @@ Requirements: Python 3.x (Windows自带), 零外部依赖
 import socket
 import json
 import os
-import sys
-import subprocess
 import tkinter as tk
 from tkinter import messagebox
+import subprocess
 
 # === 配置路径 ===
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -42,7 +41,6 @@ def get_port():
     return DEFAULT_PORT
 
 def check_port_open(port):
-    """检测端口是否被占用（判断服务是否在运行）"""
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(0.5)
     try:
@@ -51,10 +49,6 @@ def check_port_open(port):
         return True
     except:
         return False
-
-def service_status():
-    port = get_port()
-    return check_port_open(port)
 
 def start_service():
     if not os.path.exists(START_BAT):
@@ -65,7 +59,7 @@ def start_service():
             ["cmd", "/c", START_BAT],
             cwd=SCRIPT_DIR,
             shell=True,
-            creationflags=subprocess.CREATE_NO_WINDOW
+            creationflags=0x08000000  # CREATE_NO_WINDOW
         )
         return True
     except Exception as e:
@@ -77,218 +71,213 @@ def stop_service():
         subprocess.run(
             ["taskkill", "/f", "/im", "node.exe"],
             capture_output=True,
-            creationflags=subprocess.CREATE_NO_WINDOW
+            creationflags=0x08000000
         )
         return True
     except:
         return False
 
-# === Tkinter GUI ===
+# === 颜色主题 ===
+BG = "#0f1117"
+CARD = "#161b22"
+ACCENT = "#58a6ff"
+GREEN = "#3fb950"
+RED = "#f85149"
+YELLOW = "#d29922"
+WHITE = "#e6edf3"
+GRAY = "#8b949e"
+DARK_GRAY = "#484f58"
+ENTRY_BG = "#21262d"
+
 root = tk.Tk()
-root.title("ClawOSX Config")
-root.geometry("520x620")
-root.resizable(False, False)
-root.configure(bg="#1a1a2e")
+root.title("ClawOSX")
+root.geometry("480x700")
+root.minsize(400, 600)
+root.configure(bg=BG)
 
-# 颜色
-BG = "#1a1a2e"
-CARD_BG = "#16213e"
-ACCENT = "#00d4ff"
-GREEN = "#00ff88"
-RED = "#e94560"
-WHITE = "#eee"
-GRAY = "#666"
+# 可滚动画布
+canvas = tk.Canvas(root, bg=BG, highlightthickness=0, bd=0)
+scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview, width=6)
+scrollable = tk.Frame(canvas, bg=BG)
 
-def card(parent, **kwargs):
-    f = tk.Frame(parent, bg=CARD_BG, bd=0, highlightthickness=0, **kwargs)
-    f.pack(fill="x", pady=0, padx=0)
+scrollable.bind(
+    "<Configure>",
+    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+)
+canvas.create_window((0, 0), window=scrollable, anchor="nw")
+canvas.configure(yscrollcommand=scrollbar.set)
+
+scrollbar.pack(side="right", fill="y")
+canvas.pack(side="left", fill="both", expand=True)
+
+def on_mousewheel(event):
+    canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+canvas.bind_all("<MouseWheel>", on_mousewheel)
+
+# === 小工具 ===
+def card(parent, padx=16, pady=6):
+    f = tk.Frame(parent, bg=CARD, bd=0)
+    f.pack(fill="x", padx=padx, pady=pady)
     return f
 
-def section(parent, text):
-    tk.Frame(parent, bg=CARD_BG, height=2).pack(fill="x", pady=(0,0))
-    f = tk.Frame(parent, bg=CARD_BG)
-    f.pack(fill="x", pady=(12, 8), padx=16)
-    tk.Label(f, text=text, fg=ACCENT, bg=CARD_BG, font=("Segoe UI", 11, "bold")).pack(anchor="w")
-    return f
+def section_title(parent, text):
+    tk.Label(parent, text=text, fg=ACCENT, bg=CARD,
+             font=("Segoe UI", 10, "bold"), anchor="w").pack(fill="x", pady=(10, 6), padx=2)
 
-def row(parent):
-    f = tk.Frame(parent, bg=CARD_BG)
-    f.pack(fill="x", pady=4)
-    return f
+def sep(parent):
+    tk.Frame(parent, bg=BG, height=1).pack(fill="x", pady=(4, 4))
 
-def label(parent, text, width=10):
-    l = tk.Label(parent, text=text, fg="#999", bg=CARD_BG, font=("Segoe UI", 10), anchor="w", width=width)
-    l.pack(side="left", padx=(0, 8))
-    return l
-
-def entry(parent, show="", width=30):
-    e = tk.Entry(parent, bg="#0f3460", fg=WHITE, font=("Segoe UI", 11),
-                 insertbackground=WHITE, bd=0, highlightthickness=0, width=width)
-    e.pack(side="left", fill="x", expand=True, padx=0)
+def field(parent, label_text, entry_width=28, show=""):
+    f = tk.Frame(parent, bg=CARD)
+    f.pack(fill="x", pady=3)
+    tk.Label(f, text=label_text, fg=GRAY, bg=CARD,
+             font=("Segoe UI", 9), width=11, anchor="w").pack(side="left", padx=(0, 6))
+    e = tk.Entry(f, bg=ENTRY_BG, fg=WHITE, font=("Segoe UI", 10),
+                  insertbackground=WHITE, bd=0, highlightthickness=0,
+                  width=entry_width)
+    e.pack(side="left")
     if show:
         e.configure(show=show)
     return e
 
-def btn(parent, text, cmd, bg=ACCENT, fg="#1a1a2e"):
+def btn(parent, text, cmd, bg=ACCENT, fg="#0d1117", padx=10):
     b = tk.Button(parent, text=text, command=cmd, bg=bg, fg=fg,
-                  font=("Segoe UI", 10, "bold"), bd=0, cursor="hand2",
-                  activebackground=bg, activeforeground=fg, pady=6)
-    b.pack(side="left", padx=(0, 8))
+                  font=("Segoe UI", 9, "bold"), bd=0, cursor="hand2",
+                  activebackground=bg, activeforeground=fg,
+                  pady=5, padx=padx)
+    b.pack(side="left", padx=(0, 6))
     return b
 
-def toggle(parent, var, cmd=None):
-    f = tk.Frame(parent, bg=CARD_BG)
-    f.pack(side="right")
-    c = tk.Checkbutton(f, variable=var, command=cmd, bg=CARD_BG,
-                       activebackground=CARD_BG, cursor="hand2",
-                       onvalue=True, offvalue=False,
-                       selectcolor="#0f3460", indicatoron=False)
-    c.pack()
-    return c
-
-# 状态显示
-def status_widget(parent):
-    f = tk.Frame(parent, bg=CARD_BG)
-    f.pack(fill="x", pady=(0, 8))
-    dot = tk.Frame(f, width=12, height=12, bg=GRAY)
-    dot.pack(side="left", padx=(0, 8))
-    dot.configure(bg=RED)
-    lbl = tk.Label(f, text="Stopped", fg=GRAY, bg=CARD_BG, font=("Segoe UI", 11))
+def status_bar(parent):
+    f = tk.Frame(parent, bg=CARD)
+    f.pack(fill="x", pady=4)
+    dot = tk.Frame(f, width=8, height=8, bg=GRAY)
+    dot.pack(side="left", padx=(0, 8), pady=4)
+    lbl = tk.Label(f, text="Unknown", fg=GRAY, bg=CARD, font=("Segoe UI", 10))
     lbl.pack(side="left")
-    return dot, lbl
+    port_lbl = tk.Label(f, text="", fg=DARK_GRAY, bg=CARD, font=("Segoe UI", 9))
+    port_lbl.pack(side="right")
+    return dot, lbl, port_lbl
 
-# === 主界面 ===
-main = tk.Frame(root, bg=BG)
-main.pack(fill="both", expand=True)
-
-# 标题
-tk.Label(main, text="ClawOSX", fg=WHITE, bg=BG,
-         font=("Segoe UI", 28, "bold")).pack(pady=(20, 4))
-tk.Label(main, text="USB Portable AI Agent", fg=GRAY, bg=BG,
-         font=("Segoe UI", 10)).pack(pady=(0, 16))
+# === 顶部 ===
+tk.Label(scrollable, text="ClawOSX", fg=WHITE, bg=BG,
+         font=("Segoe UI", 26, "bold")).pack(pady=(18, 2))
+tk.Label(scrollable, text="USB Portable AI Agent  ·  v1.0", fg=GRAY, bg=BG,
+         font=("Segoe UI", 9)).pack(pady=(0, 14))
 
 # === 服务状态 ===
-sc = tk.Frame(main, bg=CARD_BG)
-sc.pack(fill="x", padx=16, pady=(0, 12))
-section(sc, "SERVICE STATUS")
-sf = tk.Frame(sc, bg=CARD_BG)
-sf.pack(fill="x", padx=16, pady=(0, 12))
-dot = tk.Frame(sf, width=12, height=12, bg=GRAY)
-dot.pack(side="left", padx=(0, 8))
-status_lbl = tk.Label(sf, text="Checking...", fg=GRAY, bg=CARD_BG, font=("Segoe UI", 11))
-status_lbl.pack(side="left")
-port_lbl = tk.Label(sf, text="", fg=GRAY, bg=CARD_BG, font=("Segoe UI", 9))
-port_lbl.pack(side="right")
-btnf = tk.Frame(sc, bg=CARD_BG)
-btnf.pack(fill="x", padx=16, pady=(0, 12))
-refresh_btn = btn(btnf, "Refresh", lambda: update_status())
-stop_btn = btn(btnf, "Stop", lambda: do_stop(), bg=RED, fg=WHITE)
-start_btn = btn(btnf, "Start", lambda: do_start(), bg=GREEN, fg="#1a1a2e")
+sc = card(scrollable)
+status_dot, status_lbl, status_port_lbl = status_bar(sc)
+tk.Frame(sc, bg=BG, height=1).pack(fill="x", pady=(4, 6))
+
+btn_frame = tk.Frame(sc, bg=CARD)
+btn_frame.pack(fill="x")
+btn(btn_frame, "Refresh", lambda: update_status(), bg=DARK_GRAY, fg=WHITE)
+stop_btn = btn(btn_frame, "Stop", lambda: do_stop(), bg=RED, fg=WHITE)
+start_btn = btn(btn_frame, "Start", lambda: do_start(), bg=GREEN, fg="#0d1117")
 
 def update_status():
     port = get_port()
     running = check_port_open(port)
-    dot.configure(bg=GREEN if running else RED)
-    status_lbl.configure(text="Running" if running else "Stopped", fg=GREEN if running else GRAY)
-    port_lbl.configure(text=f"port {port}")
+    status_dot.configure(bg=GREEN if running else RED)
+    status_lbl.configure(text="Running" if running else "Stopped",
+                         fg=GREEN if running else GRAY)
+    status_port_lbl.configure(text=f"port {port}" if running else "")
 
 def do_stop():
     stop_service()
-    root.after(1000, update_status)
+    root.after(1200, update_status)
 
 def do_start():
     start_service()
-    root.after(2000, update_status)
+    root.after(2500, update_status)
 
-# === AI Config ===
-ac = tk.Frame(main, bg=CARD_BG)
-ac.pack(fill="x", pady=(0, 12), padx=16)
-section(ac, "AI CONFIG")
-af = tk.Frame(ac, bg=CARD_BG)
-af.pack(fill="x", padx=16, pady=(0, 12))
+# === AI 配置 ===
+ac = card(scrollable)
+section_title(ac, "AI CONFIG")
 
 ai_provider_var = tk.StringVar(value="minimax")
-tk.Label(af, text="Provider", fg="#999", bg=CARD_BG, font=("Segoe UI", 10), anchor="w", width=10).pack(anchor="w")
-pf = tk.Frame(af, bg=CARD_BG)
-pf.pack(fill="x", pady=(4, 8))
-for val, txt in [("minimax","MiniMax"),("openai","OpenAI"),("deepseek","DeepSeek"),("custom","Custom")]:
-    r = tk.Radiobutton(pf, text=txt, variable=ai_provider_var, value=val, bg=CARD_BG, fg=WHITE,
-                       activebackground=CARD_BG, cursor="hand2", selectcolor="#0f3460", font=("Segoe UI", 10))
-    r.pack(side="left", padx=(0, 12))
+pf = tk.Frame(ac, bg=CARD)
+pf.pack(fill="x", pady=(0, 4))
+for val, txt in [("minimax", "MiniMax"), ("openai", "OpenAI"),
+                 ("deepseek", "DeepSeek"), ("custom", "Custom")]:
+    tk.Radiobutton(pf, text=txt, variable=ai_provider_var, value=val,
+                   bg=CARD, fg=WHITE, activebackground=CARD, cursor="hand2",
+                   selectcolor=ENTRY_BG, font=("Segoe UI", 9)).pack(side="left", padx=(0, 10))
 
-tk.Label(af, text="API Key", fg="#999", bg=CARD_BG, font=("Segoe UI", 10), anchor="w", width=10).pack(anchor="w")
-apikey_e = entry(af)
-tk.Label(af, text="Model", fg="#999", bg=CARD_BG, font=("Segoe UI", 10), anchor="w", width=10).pack(anchor="w", pady=(8,0))
-model_e = entry(af)
+apikey_e = field(ac, "API Key")
+model_e = field(ac, "Model", entry_width=20)
 
-# === Message Channels ===
-cc = tk.Frame(main, bg=CARD_BG)
-cc.pack(fill="x", pady=(0, 12), padx=16)
-section(cc, "MESSAGE CHANNELS")
+# === 消息渠道 ===
+cc = card(scrollable)
+section_title(cc, "MESSAGE CHANNELS")
 
 # Feishu
-fc = tk.Frame(cc, bg="#0f3460", bd=0)
-fc.pack(fill="x", pady=(0, 8))
-fh = tk.Frame(fc, bg="#0f3460")
-fh.pack(fill="x", padx=12, pady=(8, 4))
-tk.Label(fh, text="Feishu", fg="#ccc", bg="#0f3460", font=("Segoe UI", 11, "bold")).pack(side="left")
 feishu_en_var = tk.BooleanVar(value=False)
-tk.Checkbutton(fh, variable=feishu_en_var, bg="#0f3460", activebackground="#0f3460",
-               cursor="hand2", onvalue=True, offvalue=False).pack(side="right")
-fd = tk.Frame(fc, bg="#0f3460")
-fd.pack(fill="x", padx=12, pady=(0, 8))
-tk.Label(fd, text="App ID", fg="#999", bg="#0f3460", font=("Segoe UI", 9), width=10).pack(side="left")
-feishu_id_e = entry(fd, width=25)
-tk.Label(fd, text="App Secret", fg="#999", bg="#0f3460", font=("Segoe UI", 9), width=10).pack(side="left", pady=(4,0))
-feishu_sec_e = entry(fd, show="*", width=25)
+fe = tk.Frame(cc, bg=ENTRY_BG, padx=12, pady=8)
+fe.pack(fill="x", pady=(0, 4))
+fh = tk.Frame(fe, bg=ENTRY_BG)
+fh.pack(fill="x")
+tk.Label(fh, text="Feishu", fg=WHITE, bg=ENTRY_BG, font=("Segoe UI", 10, "bold")).pack(side="left")
+tk.Checkbutton(fh, variable=feishu_en_var, bg=ENTRY_BG, activebackground=ENTRY_BG,
+               cursor="hand2", onvalue=True, offvalue=False,
+               selectcolor=ACCENT, indicatoron=False).pack(side="right")
+fd = tk.Frame(fe, bg=ENTRY_BG)
+fd.pack(fill="x", pady=(4, 0))
+tk.Label(fd, text="App ID", fg=GRAY, bg=ENTRY_BG, font=("Segoe UI", 8), width=8).pack(side="left")
+feishu_id_e = tk.Entry(fd, bg=BG, fg=WHITE, font=("Segoe UI", 9),
+                       insertbackground=WHITE, bd=0, highlightthickness=0, width=22)
+feishu_id_e.pack(side="left")
+tk.Label(fd, text="App Secret", fg=GRAY, bg=ENTRY_BG, font=("Segoe UI", 8), width=9).pack(side="left", padx=(8, 0))
+feishu_sec_e = tk.Entry(fd, bg=BG, fg=WHITE, font=("Segoe UI", 9),
+                        insertbackground=WHITE, bd=0, highlightthickness=0,
+                        width=14, show="*")
+feishu_sec_e.pack(side="left")
 
 # Telegram
-tc = tk.Frame(cc, bg="#0f3460", bd=0)
-tc.pack(fill="x", pady=(0, 8))
-th = tk.Frame(tc, bg="#0f3460")
-th.pack(fill="x", padx=12, pady=(8, 4))
-tk.Label(th, text="Telegram", fg="#ccc", bg="#0f3460", font=("Segoe UI", 11, "bold")).pack(side="left")
 tg_en_var = tk.BooleanVar(value=False)
-tk.Checkbutton(th, variable=tg_en_var, bg="#0f3460", activebackground="#0f3460",
-               cursor="hand2", onvalue=True, offvalue=False).pack(side="right")
-td = tk.Frame(tc, bg="#0f3460")
-td.pack(fill="x", padx=12, pady=(0, 8))
-tk.Label(td, text="Bot Token", fg="#999", bg="#0f3460", font=("Segoe UI", 9), width=10).pack(side="left")
-tg_token_e = entry(td, show="*", width=30)
+te = tk.Frame(cc, bg=ENTRY_BG, padx=12, pady=8)
+te.pack(fill="x", pady=(0, 4))
+th = tk.Frame(te, bg=ENTRY_BG)
+th.pack(fill="x")
+tk.Label(th, text="Telegram", fg=WHITE, bg=ENTRY_BG, font=("Segoe UI", 10, "bold")).pack(side="left")
+tk.Checkbutton(th, variable=tg_en_var, bg=ENTRY_BG, activebackground=ENTRY_BG,
+               cursor="hand2", onvalue=True, offvalue=False,
+               selectcolor=ACCENT, indicatoron=False).pack(side="right")
+td = tk.Frame(te, bg=ENTRY_BG)
+td.pack(fill="x", pady=(4, 0))
+tk.Label(td, text="Bot Token", fg=GRAY, bg=ENTRY_BG, font=("Segoe UI", 8), width=8).pack(side="left")
+tg_token_e = tk.Entry(td, bg=BG, fg=WHITE, font=("Segoe UI", 9),
+                       insertbackground=WHITE, bd=0, highlightthickness=0,
+                       width=28, show="*")
+tg_token_e.pack(side="left")
 
 # Save
-sf2 = tk.Frame(cc, bg=CARD_BG)
-sf2.pack(fill="x", pady=(0, 4), padx=16)
-save_btn = btn(sf2, "Save All", lambda: save_all(), bg=ACCENT, fg="#1a1a2e")
-
-# Footer
-tk.Label(main, text="All data stored on USB drive", fg="#444", bg=BG,
-         font=("Segoe UI", 9)).pack(pady=12)
+sf = tk.Frame(cc, bg=CARD, pady=(4, 4))
+sf.pack(fill="x")
+save_btn = btn(sf, "Save All", lambda: save_all(), bg=ACCENT, fg="#0d1117", padx=16)
 
 # === Load & Save ===
 def load_config():
     cfg = load_json(OPENCLAW_JSON)
-    # AI
     providers = cfg.get("models", {}).get("providers", {})
     for k, v in providers.items():
         ai_provider_var.set(k)
         apikey_e.insert(0, v.get("apiKey", ""))
         model_e.insert(0, v.get("model", ""))
         break
-    # Feishu
     feishu = cfg.get("channels", {}).get("feishu", {})
     if feishu.get("appId"):
         feishu_en_var.set(feishu.get("enabled", False))
         feishu_id_e.insert(0, feishu.get("appId", ""))
         feishu_sec_e.insert(0, feishu.get("appSecret", ""))
-    # Telegram
     tg = cfg.get("channels", {}).get("telegram", {})
     if tg.get("botToken"):
         tg_en_var.set(tg.get("enabled", False))
         tg_token_e.insert(0, tg.get("botToken", ""))
 
 def save_all():
-    # 构建配置
     cfg = load_json(OPENCLAW_JSON)
     if "models" not in cfg:
         cfg["models"] = {"mode": "merge", "providers": {}}
@@ -316,16 +305,19 @@ def save_all():
         "botToken": tg_token_e.get().strip()
     }
     save_json(OPENCLAW_JSON, cfg)
-    messagebox.showinfo("Saved", "Configuration saved successfully")
+    messagebox.showinfo("Saved", "Configuration saved")
+
+# === 底部 ===
+tk.Label(scrollable, text="All data stored on USB drive", fg=DARK_GRAY, bg=BG,
+         font=("Segoe UI", 8)).pack(pady=14)
 
 # Init
 load_config()
 update_status()
 
-# 定期刷新状态
 def poll():
     update_status()
-    root.after(3000, poll)
+    root.after(4000, poll)
 
-root.after(1000, poll)
+root.after(1500, poll)
 root.mainloop()
