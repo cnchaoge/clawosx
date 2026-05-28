@@ -31,7 +31,7 @@ def save_json(path, data):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(json.dumps(data, indent=2, ensure_ascii=False))
-    # Strip BOM if present (UTF-8 BOM causes JSON5 parse errors)
+    # Strip BOM if present
     with open(path, "rb") as f:
         raw = f.read()
     if raw.startswith(b"\xef\xbb\xbf"):
@@ -127,13 +127,12 @@ canvas.bind_all("<MouseWheel>", on_mousewheel)
 
 # === 通用组件 ===
 def section(parent, label_text):
-    """无边框全宽区块，顶部有标题+分隔线"""
     f = tk.Frame(parent, bg=BG)
     f.pack(fill="x", pady=(0, 0))
 
     tk.Label(f, text=label_text, fg=TEXT, bg=BG,
-             font=("Microsoft YaHei UI", 13, "bold"),
-             anchor="w").pack(fill="x", padx=20, pady=(20, 6))
+        font=("Microsoft YaHei UI", 13, "bold"),
+        anchor="w").pack(fill="x", padx=20, pady=(20, 6))
 
     tk.Frame(f, bg=DIVIDER, height=1).pack(fill="x", padx=20)
     return f
@@ -142,19 +141,19 @@ def entry_field(parent, label, width=28, show=""):
     f = tk.Frame(parent, bg=BG)
     f.pack(fill="x", padx=20, pady=3)
     tk.Label(f, text=label, fg=TEXT_SEC, bg=BG,
-             font=("Microsoft YaHei UI", 10), width=10, anchor="w").pack(side="left")
+        font=("Microsoft YaHei UI", 10), width=10, anchor="w").pack(side="left")
     e = tk.Entry(f, bg=INPUT_BG, fg=TEXT, font=("Microsoft YaHei UI", 10),
-                  insertbackground=TEXT, bd=1, relief="solid",
-                  highlightthickness=0, width=width)
+        insertbackground=TEXT, bd=1, relief="solid",
+        highlightthickness=0, width=width)
     e.pack(side="left")
     if show:
         e.config(show=show)
     def on_focus_in(_):
         e.config(bg=INPUT_FOCUS, bd=1, relief="solid",
-                 highlightbackground=PRIMARY, highlightthickness=1)
+            highlightbackground=PRIMARY, highlightthickness=1)
     def on_focus_out(_):
         e.config(bg=INPUT_BG, bd=1, relief="solid",
-                 highlightbackground=DIVIDER, highlightthickness=1)
+            highlightbackground=DIVIDER, highlightthickness=1)
     e.bind("<FocusIn>", on_focus_in)
     e.bind("<FocusOut>", on_focus_out)
     e.config(highlightbackground=DIVIDER, highlightthickness=1, relief="solid", bd=1)
@@ -162,9 +161,9 @@ def entry_field(parent, label, width=28, show=""):
 
 def action_btn(parent, text, cmd, bg=PRIMARY, fg="#ffffff", expand=False):
     b = tk.Button(parent, text=text, command=cmd, bg=bg, fg=fg,
-                  font=("Microsoft YaHei UI", 10, "bold"), bd=0, cursor="hand2",
-                  activebackground=bg, activeforeground=fg,
-                  pady=7, padx=14)
+        font=("Microsoft YaHei UI", 10, "bold"), bd=0, cursor="hand2",
+        activebackground=bg, activeforeground=fg,
+        pady=7, padx=14)
     if expand:
         b.pack(fill="x", padx=20, pady=(0, 8))
     else:
@@ -173,9 +172,9 @@ def action_btn(parent, text, cmd, bg=PRIMARY, fg="#ffffff", expand=False):
 
 # === 标题 ===
 tk.Label(scrollable, text="ClawOSX", fg=TEXT, bg=BG,
-         font=("Microsoft YaHei UI", 26, "bold")).pack(pady=(20, 2))
-tk.Label(scrollable, text="U盘便携 AI 助手  ·  v1.0", fg=TEXT_SEC, bg=BG,
-         font=("Microsoft YaHei UI", 10)).pack(pady=(0, 16))
+    font=("Microsoft YaHei UI", 26, "bold")).pack(pady=(20, 2))
+tk.Label(scrollable, text="U盘便携 AI 助手 · v1.0", fg=TEXT_SEC, bg=BG,
+    font=("Microsoft YaHei UI", 10)).pack(pady=(0, 16))
 
 # === 服务状态 ===
 sc = section(scrollable, "服务状态")
@@ -188,10 +187,10 @@ dot_canvas.pack(side="left", padx=(0, 8), pady=(4, 0))
 dot_oval = dot_canvas.create_oval(0, 0, 11, 11, fill=TEXT_SEC, outline=TEXT_SEC)
 
 status_lbl = tk.Label(status_inner, text="检测中...", fg=TEXT_SEC, bg=BG,
-                       font=("Microsoft YaHei UI", 11, "normal"))
+    font=("Microsoft YaHei UI", 11, "normal"))
 status_lbl.pack(side="left")
 port_lbl = tk.Label(status_inner, text="", fg=TEXT_SEC, bg=BG,
-                     font=("Microsoft YaHei UI", 10))
+    font=("Microsoft YaHei UI", 10))
 port_lbl.pack(side="right")
 
 btn_row = tk.Frame(sc, bg=BG)
@@ -202,12 +201,11 @@ start_btn_ref = action_btn(btn_row, "启动", lambda: do_start(), bg=SUCCESS, fg
 
 # 开始聊天按钮
 chat_btn_frame = tk.Frame(sc, bg=BG)
-chat_btn_frame.pack(fill="x", padx=20, pady=(0, 8))
 chat_btn = tk.Button(chat_btn_frame, text="开始聊天", command=lambda: open_browser(),
-                    bg=SUCCESS, fg="#ffffff",
-                    font=("Microsoft YaHei UI", 12, "bold"), bd=0, cursor="hand2",
-                    activebackground=SUCCESS, activeforeground="#ffffff",
-                    pady=9)
+    bg=SUCCESS, fg="#ffffff",
+    font=("Microsoft YaHei UI", 12, "bold"), bd=0, cursor="hand2",
+    activebackground=SUCCESS, activeforeground="#ffffff",
+    pady=9)
 chat_btn.pack(fill="x")
 chat_btn_frame.pack_forget()
 
@@ -223,7 +221,7 @@ def update_status():
     running = check_port_open(port)
     set_dot(SUCCESS if running else TEXT_SEC)
     status_lbl.configure(text="运行中" if running else "已停止",
-                         fg=SUCCESS if running else TEXT_SEC)
+        fg=SUCCESS if running else TEXT_SEC)
     port_lbl.configure(text=f"端口 {port}" if running else "")
     if running:
         chat_btn_frame.pack(fill="x", padx=20, pady=(0, 8))
@@ -251,6 +249,7 @@ def do_start():
     start_btn_ref.configure(state="disabled")
     stop_btn_ref.configure(state="disabled")
     chat_btn_frame.pack_forget()
+    root.update_idletasks()
     start_service()
 
     def poll_wait():
@@ -263,11 +262,10 @@ def do_start():
             start_btn_ref.configure(state="normal")
             stop_btn_ref.configure(state="normal")
             chat_btn_frame.pack(fill="x", padx=20, pady=(0, 8))
-            webbrowser.open(f"http://127.0.0.1:{port}/")
         else:
             start_btn_ref.configure(state="normal")
             stop_btn_ref.configure(state="normal")
-            update_status()
+            root.after(1000, poll_wait)
 
     root.after(2500, poll_wait)
 
@@ -293,22 +291,22 @@ def select_provider(val):
     for k in pill_frames:
         if k == val:
             pill_frames[k].config(bg=PILL_ACTIVE_BG, bd=1,
-                                  highlightbackground=PILL_ACTIVE_BORDER,
-                                  highlightthickness=1)
+                highlightbackground=PILL_ACTIVE_BORDER,
+                highlightthickness=1)
             pill_labels[k].config(fg=PRIMARY)
         else:
             pill_frames[k].config(bg=PILL_BG, bd=0,
-                                  highlightbackground=DIVIDER,
-                                  highlightthickness=1)
+                highlightbackground=DIVIDER,
+                highlightthickness=1)
             pill_labels[k].config(fg=TEXT_SEC)
 
 for val, txt in provider_options:
     f = tk.Frame(pill_row, bg=PILL_BG, bd=1, relief="flat",
-                 highlightbackground=DIVIDER, highlightthickness=1)
+        highlightbackground=DIVIDER, highlightthickness=1)
     f.pack(side="left", padx=(0, 6))
     pill_frames[val] = f
     l = tk.Label(f, text=txt, fg=TEXT_SEC, bg=PILL_BG,
-                  font=("Microsoft YaHei UI", 10), padx=16, pady=6, cursor="hand2")
+        font=("Microsoft YaHei UI", 10), padx=16, pady=6, cursor="hand2")
     l.pack()
     pill_labels[val] = l
     def on_click(e, v=val):
@@ -331,7 +329,7 @@ def channel_block(parent, name, id_label, sec_label):
     header = tk.Frame(f, bg=BG)
     header.pack(fill="x", pady=(0, 6))
     tk.Label(header, text=name, fg=TEXT, bg=BG,
-             font=("Microsoft YaHei UI", 11, "bold")).pack(side="left")
+        font=("Microsoft YaHei UI", 11, "bold")).pack(side="left")
 
     enable_var = tk.BooleanVar(value=False)
     toggle = tk.Frame(header, width=40, height=22, bg=TOGGLE_OFF, cursor="hand2")
@@ -368,7 +366,7 @@ def tg_block(parent, name, token_label):
     header = tk.Frame(f, bg=BG)
     header.pack(fill="x", pady=(0, 6))
     tk.Label(header, text=name, fg=TEXT, bg=BG,
-             font=("Microsoft YaHei UI", 11, "bold")).pack(side="left")
+        font=("Microsoft YaHei UI", 11, "bold")).pack(side="left")
 
     enable_var = tk.BooleanVar(value=False)
     toggle = tk.Frame(header, width=40, height=22, bg=TOGGLE_OFF, cursor="hand2")
@@ -413,7 +411,6 @@ def load_config():
         ai_provider_var.set(k)
         select_provider(k)
         apikey_e.insert(0, v.get("apiKey", ""))
-        # Extract model name from provider/model ref
         model_ref = cfg.get("agents", {}).get("defaults", {}).get("model", {}).get("primary", "")
         if "/" in model_ref:
             model_e.insert(0, model_ref.split("/")[1])
@@ -436,7 +433,6 @@ def save_all():
     provider = ai_provider_var.get()
     model_name = model_e.get().strip() or "MiniMax-M2.7"
 
-    # Always include gateway block to avoid gateway-mode-missing anomaly
     cfg["gateway"] = {
         "port": DEFAULT_PORT,
         "auth": {"mode": "none"}
@@ -492,7 +488,7 @@ def save_all():
 
 # === 底部 ===
 tk.Label(scrollable, text="所有数据保存在 U 盘", fg=TEXT_SEC, bg=BG,
-         font=("Microsoft YaHei UI", 8)).pack(pady=12)
+    font=("Microsoft YaHei UI", 8)).pack(pady=12)
 
 load_config()
 update_status()
