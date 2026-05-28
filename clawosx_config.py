@@ -407,7 +407,12 @@ def load_config():
         ai_provider_var.set(k)
         select_provider(k)
         apikey_e.insert(0, v.get("apiKey", ""))
-        model_e.insert(0, v.get("model", ""))
+        # Extract model name from provider/model ref
+        model_ref = cfg.get("agents", {}).get("defaults", {}).get("model", {}).get("primary", "")
+        if "/" in model_ref:
+            model_e.insert(0, model_ref.split("/")[1])
+        else:
+            model_e.insert(0, v.get("model", "MiniMax-M2.7"))
         break
     feishu = cfg.get("channels", {}).get("feishu", {})
     if feishu.get("appId"):
@@ -421,21 +426,42 @@ def load_config():
 
 def save_all():
     cfg = load_json(OPENCLAW_JSON)
-    if "models" not in cfg:
-        cfg["models"] = {"mode": "merge", "providers": {}}
-    if "providers" not in cfg["models"]:
-        cfg["models"]["providers"] = {}
-    provider = ai_provider_var.get()
     apikey = apikey_e.get().strip()
     if not apikey:
         messagebox.showwarning("警告", "API Key 不能为空")
         return
+    provider = ai_provider_var.get()
+    model_name = model_e.get().strip() or "MiniMax-M2.7"
+
+    cfg["env"] = cfg.get("env", {})
+    cfg["env"]["MINIMAX_API_KEY"] = apikey
+
+    cfg["models"] = cfg.get("models", {"mode": "merge", "providers": {}})
+    cfg["models"]["mode"] = "merge"
     cfg["models"]["providers"] = {
-        provider: {
+        "minimax": {
+            "baseUrl": "https://api.minimax.io/anthropic",
             "apiKey": apikey,
-            "model": model_e.get().strip()
+            "api": "anthropic-messages",
+            "models": [
+                {
+                    "id": "MiniMax-M2.7",
+                    "name": "MiniMax M2.7",
+                    "input": ["text"],
+                    "contextWindow": 204800,
+                    "maxTokens": 131072
+                }
+            ]
         }
     }
+
+    cfg["agents"] = cfg.get("agents", {"defaults": {}})
+    cfg["agents"]["defaults"] = {
+        "model": {
+            "primary": f"minimax/{model_name}"
+        }
+    }
+
     cfg["channels"] = cfg.get("channels", {})
     cfg["channels"]["feishu"] = {
         "enabled": feishu_en_var.get(),
