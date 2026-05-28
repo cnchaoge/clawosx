@@ -51,8 +51,8 @@ if "%NEED_NODE_DOWNLOAD%"=="0" if "%NEED_OPENCLAW_INSTALL%"=="0" (
 
 echo.
 echo Checking disk space...
-for %%V in ("%UCLAW_DIR%.") do set "DRIVE=%%~dV"
-for /f "tokens=2" %%a in ('powershell -Command "(Get-PSDrive -Name '!DRIVE:~0,1!' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Free) / 1MB" 2^>nul') do (
+set "DRIVE=%UCLAW_DIR:~0,2%"
+for /f "delims=" %%a in ('powershell -Command "(Get-PSDrive -Name '%DRIVE:~0,1%' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Free) / 1MB -as [int]"') do (
     if %%a GEQ 300 (
         echo [OK] Disk space OK
     ) else (
