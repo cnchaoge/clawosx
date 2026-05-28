@@ -203,7 +203,7 @@ dot_canvas = tk.Canvas(status_dot_wrap, width=14, height=14, bg=CARD_BG,
 dot_canvas.pack()
 dot_oval = dot_canvas.create_oval(1, 1, 13, 13, fill=TEXT_SEC, outline=TEXT_SEC)
 status_lbl = tk.Label(status_row, text="检测中...", fg=TEXT_SEC, bg=CARD_BG,
-                       font=("Microsoft YaHei UI", 10, "medium"))
+                       font=("Microsoft YaHei UI", 10, "normal"))
 status_lbl.pack(side="left")
 port_lbl = tk.Label(status_row, text="", fg=TEXT_SEC, bg=CARD_BG,
                      font=("Microsoft YaHei UI", 9))
