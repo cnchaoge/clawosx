@@ -442,8 +442,8 @@ def tg_channel_section(parent, name, token_label, token_key):
 tg_en_var, tg_token_e = tg_channel_section(cc, "Telegram", "Bot Token", "botToken")
 
 # 保存按钮
-save_row = tk.Frame(cc, bg=CARD_BG, pady=(0, 14))
-save_row.pack(fill="x")
+save_row = tk.Frame(cc, bg=CARD_BG)
+save_row.pack(fill="x", pady=(0, 14))
 save_btn = btn(save_row, "保存配置", lambda: save_all(), bg=PRIMARY, fg="#ffffff", padx=20)
 
 # === 加载 & 保存 ===
